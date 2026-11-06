@@ -29,13 +29,25 @@ jobs:
           flutter create --platforms=android --project-name cricgo ../tmp_app
           cp -r ../tmp_app/android ./android
 
+      - name: App name and internet permission
+        working-directory: cricgo
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          sed -i 's#android:label="[^"]*"#android:label="CricGo"#' "$MANIFEST"
+          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <application#' "$MANIFEST"
+          cat "$MANIFEST"
+
       - name: Get packages
         working-directory: cricgo
         run: flutter pub get
 
+      - name: Generate launcher icon
+        working-directory: cricgo
+        run: dart run flutter_launcher_icons
+
       - name: Build APK
         working-directory: cricgo
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=CRICKET_API_KEY=${{ secrets.CRICKET_API_KEY }}
 
       - uses: actions/upload-artifact@v4
         with:
