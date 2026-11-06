@@ -1,0 +1,43 @@
+name: Build CricGo APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip project
+        run: unzip -o cricgo_starter.zip
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Add Android platform files
+        working-directory: cricgo
+        run: |
+          flutter create --platforms=android --project-name cricgo ../tmp_app
+          cp -r ../tmp_app/android ./android
+
+      - name: Get packages
+        working-directory: cricgo
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: cricgo
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cricgo-apk
+          path: cricgo/build/app/outputs/flutter-apk/app-release.apk
